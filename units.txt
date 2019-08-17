@@ -1,0 +1,8 @@
+Quake > Unity Units
+
+1m = 32
+BSP importer scale should be 0.03125 (1 / 32)
+Already imported bsps can be scaled by 0.625 (0.03125 / 0.05)
+
+Player Max Speed = 10 (320 / 32)
+Gravity = 25 (800 / 32)
