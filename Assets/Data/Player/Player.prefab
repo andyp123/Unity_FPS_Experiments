@@ -131,7 +131,7 @@ MonoBehaviour:
   maxSpeed: 10
   airSpeedMultiplier: 0.5
   acceleration: 8
-  jumpForce: 400
+  jumpForce: 420
   stepHeight: 0.625
   stepClearance: 0.1
   stepSpeedTolerance: 1
