@@ -133,10 +133,12 @@ MonoBehaviour:
   acceleration: 8
   jumpForce: 420
   stepHeight: 0.625
-  stepClearance: 0.1
+  stepClearance: 0.15
   stepSpeedTolerance: 1
+  stepMaxSlopeAngle: 30
+  maxSlopeAngle: 45
   mouseSensitivity: 100
-  clampAngle: 80
+  clampAngle: 85
   cameraLerpSpeed: 5
 --- !u!114 &4813410902068590306
 MonoBehaviour:
