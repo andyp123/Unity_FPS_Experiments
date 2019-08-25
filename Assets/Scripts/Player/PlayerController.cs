@@ -3,7 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /*
+TODO
+- if onGround but no bottom ray hit, use rigidbody bottom
+- more resistance from sliding down slopes < slopeTolerance
+- should probably add terminal velocity check
+
 CURRENT BUGS
+- should I just be using collision with the bodyCollider to detect steps?
 - slopes are detected as stairs
 - can't walk up stairs when pushing against wall
 - step check can break jump
@@ -274,31 +280,31 @@ public class PlayerController : MonoBehaviour
 
             if (stepCheck && _hitFront.hit && offsetY > stepClearance)
             {
-                if (_hitBottom.hit)
+                // TODO: This needs some testing to be sure it works OK. Could cause issues on some weird geometry
+                Vector3 hitBottom = _hitBottom.hit ? _hitBottom.point : transform.position;
+
+                Debug.DrawLine(hitBottom, _hitFront.point, Color.red, 0.5f, false);
+                Vector3 mid = hitBottom + (_hitFront.point - hitBottom) * 0.5f;
+                DebugDrawPoint(mid, 0.1f, Color.yellow, 0.5f, false);
+
+                Vector3 midOffset = (transform.position + Vector3.up * groundCollider.radius) - mid;
+                float dot = Vector3.Dot(_hitFront.normal, Vector3.up);
+
+                bool doStep = groundCollider.radius > midOffset.magnitude && dot >= _stepMaxSlopeAngleArc;
+
+                //Debug.Log(string.Format("STEP: {0} | (r:{1}, d:{2})", doStep, groundCollider.radius, midOffset.magnitude));
+
+                if (doStep)
                 {
-                    Debug.DrawLine(_hitBottom.point, _hitFront.point, Color.red, 0.5f, false);
-                    Vector3 mid = _hitBottom.point + (_hitFront.point - _hitBottom.point) * 0.5f;
-                    DebugDrawPoint(mid, 0.1f, Color.yellow, 0.5f, false);
-
-                    Vector3 midOffset = (transform.position + Vector3.up * groundCollider.radius) - mid;
-                    float dot = Vector3.Dot(_hitFront.normal, Vector3.up);
-
-                    bool doStep = groundCollider.radius > midOffset.magnitude && dot >= _stepMaxSlopeAngleArc;
-
-                    //Debug.Log(string.Format("STEP: {0} | (r:{1}, d:{2})", doStep, groundCollider.radius, midOffset.magnitude));
-
-                    if (doStep)
+                    // Check the player's rigidbody can move up and forward before trying to step
+                    float clearance = 0.05f;
+                    float radius = bodyCollider.radius;
+                    Vector3 basePointUp = new Vector3(transform.position.x, _hitFront.point.y + clearance, transform.position.z);
+                    if (!CheckCapsule(basePointUp, radius, PlayerHeight + clearance, layerMask))
                     {
-                        float clearance = 0.05f;
-                        float radius = bodyCollider.radius;
-                        Vector3 basePointUp = new Vector3(transform.position.x, _hitFront.point.y + clearance, transform.position.z);
-                        bool upCheck = CheckCapsule(basePointUp, radius, PlayerHeight + clearance, layerMask);
-
-                        float checkRadius = radius * 0.35f;
+                        float checkRadius = radius * 0.25f;
                         float forwardOffset = radius - (checkRadius / radius) + 0.1f;
-                        bool forwardCheck = CheckCapsule(basePointUp + checkDir * forwardOffset, checkRadius, PlayerHeight + clearance, layerMask);
-
-                        if (!(upCheck || forwardCheck))
+                        if (!CheckCapsule(basePointUp + checkDir * forwardOffset, checkRadius, PlayerHeight + clearance, layerMask))
                         {
                             offsetY = basePointUp.y - transform.position.y;
 
@@ -313,38 +319,6 @@ public class PlayerController : MonoBehaviour
                         }
                     }
                 }
-                else
-                {
-                    Debug.Log("No bottom hit");
-                }
-
-                // float dot = Vector3.Dot(_hitFront.normal, Vector3.up);
-                // if (dot >= _stepMaxSlopeAngleArc)
-                // {
-                //     float clearance = 0.05f;
-                //     float radius = bodyCollider.radius;
-                //     Vector3 basePointUp = new Vector3(transform.position.x, _hitFront.point.y + clearance, transform.position.z);
-                //     bool upCheck = CheckCapsule(basePointUp, radius, PlayerHeight + clearance, layerMask);
-
-                //     float checkRadius = radius * 0.35f;
-                //     float forwardOffset = radius - (checkRadius / radius) + 0.1f;
-                //     bool forwardCheck = CheckCapsule(basePointUp + checkDir * forwardOffset, checkRadius, PlayerHeight + clearance, layerMask);
-
-                //     if (!(upCheck || forwardCheck))
-                //     {
-                //         offsetY = basePointUp.y - transform.position.y;
-
-                //         // teleport rigidbody, zero y component to avoid bouncing or sinking
-                //         _rigidbody.position = basePointUp;
-                //         _rigidbody.velocity = currentVelocity;
-
-                //         // This will be lerped up in Update()
-                //         Vector3 rootPos = mt.position;
-                //         rootPos.y -= offsetY;
-                //         mt.position = rootPos;
-                //     }
-                // }
-                // maybe slope movement should be handled here?
             }
         }
 
